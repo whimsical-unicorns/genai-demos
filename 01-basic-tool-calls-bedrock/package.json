@@ -1,0 +1,33 @@
+{
+  "name": "01-basic-tool-calls-bedrock",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "npm run start:ts",
+    "start:ts": "npx tsx index.ts",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@aws-crypto/sha256-js": "^5.2.0",
+    "@aws-sdk/credential-provider-node": "^3.588.0",
+    "@aws-sdk/types": "^3.577.0",
+    "@langchain/anthropic": "^0.2.0",
+    "@langchain/community": "^0.2.4",
+    "@smithy/eventstream-codec": "^3.0.0",
+    "@smithy/protocol-http": "^4.0.0",
+    "@smithy/signature-v4": "^3.0.0",
+    "@smithy/util-utf8": "^3.0.0",
+    "dotenv": "^16.4.5",
+    "langchain": "^0.2.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.14.6",
+    "tsx": "^4.11.0",
+    "typescript": "^5.4.5"
+  }
+}
