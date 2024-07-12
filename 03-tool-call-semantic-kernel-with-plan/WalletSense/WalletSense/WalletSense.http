@@ -1,0 +1,14 @@
+@WalletSense_HostAddress = http://localhost:5259
+
+GET {{WalletSense_HostAddress}}/healthcheck/
+Accept: application/json
+
+###
+
+POST {{WalletSense_HostAddress}}/v1/chat/sessions/test
+Accept: application/json
+Content-Type: application/json
+
+{
+    "Prompt": "Hello"
+}
