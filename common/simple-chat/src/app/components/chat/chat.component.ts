@@ -3,6 +3,7 @@ import { Component } from '@angular/core';
 import { MaterialModule } from '../../material/material.module';
 import { FormsModule } from '@angular/forms';
 import { ChatHttpService, ChatMessage } from '../../services/chat-http.service';
+import { finalize } from 'rxjs';
 
 @Component({
   selector: 'app-chat',
@@ -15,12 +16,20 @@ export class ChatComponent {
   public message: string = '';
   public chatHistory: ChatMessage[] = [];
 
+  public loading: boolean = false;
+
   constructor(private readonly chatHttpService: ChatHttpService) {
     
   }
 
   sendMessage() {
-    this.chatHttpService.sendMessage('new', this.message).subscribe({
+    this.loading = true;
+    this.chatHttpService.sendMessage('new', this.message).pipe(
+      finalize(() => {
+        this.loading = false;
+        this.message = '';
+      })
+    ).subscribe({
       next: (response) => {
         console.log(response);
         this.chatHistory.push({ message: this.message, role: 'user' });
@@ -28,6 +37,7 @@ export class ChatComponent {
       },
       error: (error: any) => {
         console.error(error);
+        alert(`Error: ${error.message}`);
       }
     });
   }

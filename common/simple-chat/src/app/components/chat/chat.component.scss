@@ -10,31 +10,44 @@
     border-radius: 10px;
     border: 1px solid #606c6c;
     margin-bottom: 1em;
+
+    .message {
+        font-size: 1.2em;
+    }
+
+    .author {
+        font-size: 0.8em;
+        color: #669999;
+    }
+
+    &.user {
+        align-items: flex-start;
+    }
+
+    &.user::before {
+        content: '👩‍🚀';
+        margin-right: 0.5em;
+    }
+
+    &.assistant {
+        align-items: flex-end;
+    }
+
+    &.assistant::before {
+        content: '🤖';
+        margin-left: 0.5em;
+    }
 }
 
-.chat-message .message {
-    font-size: 1.2em;
-}
+mat-card-actions {
+    flex-wrap: wrap;
 
-.chat-message .author {
-    font-size: 0.8em;
-    color: #669999;
-}
+    mat-progress-bar {
+        width: 100%;
+        margin: 1em 0;
+    }
 
-.chat-message.user {
-    align-items: flex-start;
-}
-
-.chat-message.user::before {
-    content: '👤';
-    margin-right: 0.5em;
-}
-
-.chat-message.assistant {
-    align-items: flex-end;
-}
-
-.chat-message.assistant::before {
-    content: '🤖';
-    margin-left: 0.5em;
+    mat-form-field {
+        width: 40em;
+    }
 }

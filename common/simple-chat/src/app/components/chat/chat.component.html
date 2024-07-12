@@ -11,6 +11,9 @@
         </div>
     </mat-card-content>
     <mat-card-actions>
+        @if (loading) {
+            <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+        }
         <mat-form-field>
             <input matInput placeholder="Message" [(ngModel)]="message" (keyup.enter)="sendMessage()">
         </mat-form-field>

@@ -1,10 +1,9 @@
-using Microsoft.Extensions.Azure;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
-using System.ComponentModel;
-using System.Text.Json.Serialization;
+using WalletSense;
 
+#region .NET Minimal API default stuff + cors
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -32,94 +31,75 @@ if (app.Environment.IsDevelopment())
 
 app.UseCors();
 
-string openAIKey = app.Configuration["OpenAIAPIKey"] ?? string.Empty;
-var skBuilder = Kernel.CreateBuilder().AddOpenAIChatCompletion("gpt-4o", openAIKey);
-Kernel kernel = skBuilder.Build();
-var chatCompletionService = kernel.GetRequiredService<IChatCompletionService>();
-kernel.Plugins.AddFromType<LightsPlugin>("Lights");
-
-OpenAIPromptExecutionSettings openAIPromptExecutionSettings = new()
-{
-	ToolCallBehavior = ToolCallBehavior.AutoInvokeKernelFunctions
-};
-
-var history = new ChatHistory();
-
 app.MapGet("/healthcheck/", () =>
 {
 	return "OK";
 });
+#endregion
 
+#region Semantic Kernel "standard" setup
+// to initialize user-secrets run `dotnet user-secrets init` and `dotnet user-secrets set "OpenAIAPIKey" "your-key"`
+string openAIKey = app.Configuration["OpenAIAPIKey"] ?? string.Empty;
+
+// setup the kernel "core"
+var skBuilder = Kernel.CreateBuilder()
+	.AddOpenAIChatCompletion("gpt-4o", openAIKey);
+Kernel kernel = skBuilder.Build();
+var chatCompletionService = kernel.GetRequiredService<IChatCompletionService>(); // get service to send and receive messages
+var history = new ChatHistory(); // keep track of the conversation; only one in this case
+
+// define basic settings for tool calls
+OpenAIPromptExecutionSettings openAIPromptExecutionSettings = new()
+{
+	ToolCallBehavior = ToolCallBehavior.AutoInvokeKernelFunctions,
+	Temperature = 0.5,
+};
+#endregion
+
+// add the plugins / tools / functions / connectors
+kernel.Plugins.AddFromType<AccountPlugin>("Account");
+//kernel.Plugins.AddFromType<LightsPlugin>("Lights"); // to try demo from docs
+
+// configure system prompt; this can be dynamic based on user's settings
+history.AddSystemMessage("""
+	You are 'Wallet Sense', a smart wallet and financial assistant for users on the go.
+	User configured you to help them save more and avoid unnecessary expenses.
+	You should analyze their recent transactions and predicted spending, and if the planned transaction is unnecessary, convince them to avoid it.
+	Do NOT recapitulate the transactions or current balance. Answer in short recommendations for given transaction planned.
+	""");
+
+// in this example we simply ignore the sessionId
 app.MapPost("v1/chat/sessions/{sessionId}", async (ChatRequest request, string sessionId) =>
 {
-	history.AddUserMessage(request.Prompt);
+	history.AddUserMessage(request.Prompt ?? string.Empty); // track history
 
+	// main "magic" happens here
+	// get the response from AI
+	// let Kernel handle the conversation and tool calls and execution
 	var result = await chatCompletionService.GetChatMessageContentAsync(
 		history,
 		executionSettings: openAIPromptExecutionSettings,
 		kernel: kernel);
 
-	history.AddMessage(result.Role, result?.Content ?? string.Empty);
+	history.AddMessage(result.Role, result?.Content ?? string.Empty); // track history
 
 	var lastHistory = history.Last();
-	return new { role = lastHistory.Role.Label, message = lastHistory.Content };
+	return new ChatResponse { Role = lastHistory.Role.Label, Message = lastHistory.Content ?? string.Empty };
 })
 .WithName("Chat")
 .WithOpenApi();
 
 app.Run();
 
-
+#region models and other formals
 public class ChatRequest
 {
-	public string Prompt { get; set; }
+	public string? Prompt { get; set; }
 }
 
-public class LightsPlugin
+public class ChatResponse
 {
-	// Mock data for the lights
-	private readonly List<LightModel> lights = new()
-   {
-	  new LightModel { Id = 1, Name = "Table Lamp", IsOn = false },
-	  new LightModel { Id = 2, Name = "Porch light", IsOn = false },
-	  new LightModel { Id = 3, Name = "Chandelier", IsOn = true }
-   };
-
-	[KernelFunction("get_lights")]
-	[Description("Gets a list of lights and their current state")]
-	[return: Description("An array of lights")]
-	public async Task<List<LightModel>> GetLightsAsync()
-	{
-		return lights;
-    }
-
-	[KernelFunction("change_state")]
-	[Description("Changes the state of the light")]
-	[return: Description("The updated state of the light; will return null if the light does not exist")]
-	public async Task<LightModel?> ChangeStateAsync(int id, bool isOn)
-	{
-		var light = lights.FirstOrDefault(light => light.Id == id);
-
-		if (light == null)
-		{
-			return null;
-		}
-
-		// Update the light with the new state
-		light.IsOn = isOn;
-
-		return light;
-	}
+	public string Role { get; set; } = string.Empty;
+	public string Message { get; set; } = string.Empty;
 }
-
-public class LightModel
-{
-	[JsonPropertyName("id")]
-	public int Id { get; set; }
-
-	[JsonPropertyName("name")]
-	public string Name { get; set; }
-
-	[JsonPropertyName("is_on")]
-	public bool? IsOn { get; set; }
-}
+#endregion
