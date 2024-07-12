@@ -1,0 +1,19 @@
+<mat-toolbar color="primary">
+  <button mat-icon-button (click)="sidenav.toggle()"><mat-icon color="primary">menu</mat-icon></button>
+  <h1>Simple chat</h1>
+  <a mat-button routerLink="/" routerLinkActive="active" class="mat-button">Home</a>
+  <a mat-button routerLink="/chat" routerLinkActive="active">Chat</a>
+</mat-toolbar>
+<mat-sidenav-container>
+  <mat-sidenav #sidenav mode="side" opened="false">
+    <h4>Choose API</h4>
+    <ul>
+      <li><button mat-button (click)="setApi('http://localhost:5259')">Wallet Sense: http://localhost:5259</button></li>
+      <li><button mat-button (click)="setApi('http://localhost:3000/api')">http://localhost:3000/api</button></li>
+    </ul>
+  </mat-sidenav>
+  <mat-sidenav-content>
+    <router-outlet></router-outlet>
+  </mat-sidenav-content>
+</mat-sidenav-container>
+<p style="text-align: right;">Selected api {{ api$ | async }}</p>
