@@ -1,8 +1,12 @@
 ﻿using LLama;
 using LLama.Common;
 
-Console.WriteLine("Please enter the model path (or press Enter to skip):");
-string? modelPath = Console.ReadLine();
+string? modelPath = args.Length > 0 ? args[0] : null;
+if (string.IsNullOrWhiteSpace(modelPath))
+{
+	Console.WriteLine("Please enter the model path (or press Enter to skip):");
+	modelPath = Console.ReadLine();
+}
 modelPath = string.IsNullOrWhiteSpace(modelPath) ? @"C:\temp\llm_models_weights\Phi-3-mini-4k-instruct-q4.gguf" : modelPath;
 
 LLama.Native.NativeLibraryConfig.All.WithLogCallback((l, x) => Console.WriteLine($"[{l}]\t{x}"));
